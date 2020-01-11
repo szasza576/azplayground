@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: girl
+  labels:
+    app: kids
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kids
+  template:
+    metadata:
+      labels:
+        app: kids
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+      - name: girl
+        image: "gaborsacr.azurecr.io/girl:latest"
+        resources:
+          requests:
+            cpu: 400m
+            memory: 1000Mi
+          limits:
+            cpu: 400m
+            memory: 1000Mi
+        ports:
+        - containerPort: 80
