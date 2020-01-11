@@ -1,10 +1,11 @@
 # Readme
 This repository is used to play a bit around Azure. I demonstrates how to deploy VMs, Container Registry, Kubernetes Cluster, Containers, etc.
 This is not a full training or learning material. It just give a feeling about Azure with some focus areas (especially containers).
-The target is to have 2 hours of fun for the price of 1 or half bottle of beer. Seriously, you will use my shared subscription so deploy carefully ;)
+The target is to have 2 hours of fun for the price of 1 or half bottle of beer (at Hungarian rate). Seriously, you will use my shared subscription so deploy carefully ;)
 
 ## Azure interface
 In the below example we will use the [Azure Portal](https://portal.azure.com/) and the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest).
+
 For Windows download the installer from here: [Azure CLI](https://aka.ms/installazurecliwindows)
 
 While you install let's see how Azure organizes resources.
@@ -136,9 +137,10 @@ We could run the container directly from the Registry without any K8s cluster bu
 ```powershell
 $AKSName="<yourAKSname>"
 az aks create --resource-group $ResourceGroup --name $AKSName --node-count 1 --enable-addons monitoring --generate-ssh-keys --kubernetes-version "1.15.5" --node-vm-size Standard_D2s_v3 --enable-cluster-autoscaler --min-count 1 --max-count 3 --attach-acr $ACRName --load-balancer-sku Basic
-
 ```
-This will take a while (10-15 minutes).
+This will take a while (about 10 minutes).
+
+Note, set up the access rights now to speed up replication!
 
 ## Grant access to the Builder VM to push to the Registry
 We need to authenticate the Builder VM to the Registry hence we will create a **Managed Identity**.
