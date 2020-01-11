@@ -81,7 +81,7 @@ Clean up. You can notice that there are several resources automatically created 
 4. Click on **Delete**
 Removing everything will take a while. No need to wait for it.
 
-** Create a Container builder VM
+## Create a Container builder VM
 We need a VM which will build our container and push it into the Registry.
 1. On the home page click on **Create resource**. You can see **Categories** and some **Popular** options here. 
 2. Click on **Ubuntu Server 18.04 LTS**. The VM creation blade comes up immediately.
@@ -101,16 +101,211 @@ The deployment takes ~5 minutes.
 
 Meanwhile prepare putty with proxy.
 ![Putty](Putty_proxy.png)
+
+## Build a container
+When the VM deployment is done then it's time to build the first conatiner.
 1. Go to your **Resource group**
 2. Find your **Public IP address**. Hint: it has an own resource but your can find it a the Virtual Machine as well.
 3. Connect to the VM via SSH. You shall use your given username/password.
-4. Install Docker
+4. Install Docker (SSH)
 ```bash
 sudo apt-get update
 sudo apt-get install docker docker.io
 ```
-5. Build the first container
+5. Build the first container (SSH)
 ```bash
-wget 
-sudo docker 
+sudo docker build -t boy:latest https://github.com/szasza576/azplayground.git#master:/nginx/boy
 ```
+Hurray we have a container.
+
+## Create a Container Registry
+We need a Registry to store our containers. We could crete it on the portal but now we will use the Azure CLI.
+1. Open your Powershell terminal what we prepared at the beginning.
+2. To create the Registry we need the resource group's name and a name for the Registry itself. ACR name shall be globally unique. Run these in Powershell. For easier management we use environment variables so we can copy-paste the comnmands.
+```powershell
+$ResourceGroup="<yourresourcegroupname>"
+$ACRName="<youracrname>"
+az acr create --resource-group $ResourceGroup --name $ACRname --sku Basic
+```
+3. The deployment shall be done in few seconds.
+
+## Create a Kubernetes Cluster
+Note, this deployment takes the longest hence we start it as early.
+We could run the container directly from the Registry without any K8s cluster but that wouldn't be fun enough. So let's create one.
+1. Create a K8s cluster in Powershell
+```powershell
+$AKSName="<yourAKSname>"
+az aks create --resource-group $ResourceGroup --name $AKSName --node-count 1 --enable-addons monitoring --generate-ssh-keys --kubernetes-version "1.15.5" --node-vm-size Standard_D2s_v3 --enable-cluster-autoscaler --min-count 1 --max-count 3 --attach-acr $ACRName --load-balancer-sku Basic
+
+```
+This will take a while (10-15 minutes).
+
+## Grant access to the Builder VM to push to the Registry
+We need to authenticate the Builder VM to the Registry hence we will create a **Managed Identity**.
+You can find more details in [Azure's documentation](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-authentication-managed-identity).
+1. Create an Identity in powershell
+```powershell
+az identity create --resource-group $ResourceGroup --name myACRId
+```
+2. Get **user ID** and **service principal ID** of the new identity
+```powershell
+$userID=$(az identity show --resource-group $ResourceGroup --name myACRId --query id --output tsv)
+$spID=$(az identity show --resource-group $ResourceGroup --name myACRId --query principalId --output tsv)
+```
+3. Assign Identity to our VM
+```powershell
+az vm identity assign --resource-group $ResourceGroup --name <<yourVMname>> --identities $userID
+```
+4. Grant identity access to the container registry
+```powershell
+$resourceID=$(az acr show --resource-group $ResourceGroup --name $ACRname --query id --output tsv)
+az role assignment create --assignee $spID --scope $resourceID --role acrpush
+```
+5. The role is assigned. Check it on the portal.
+
+## Push the container
+The access is granted to the VM. Now we will connect to the Registry and push the image.
+1. Go back to the SSH terminal of the VM
+2. Install Azure-CLI on the VM (SSH)
+```bash
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+```
+3. Connect to Azure and then to the registry
+```bash
+az login --identity
+sudo az acr login --name <youracrname>
+```
+4. Tag and push the image
+```bash
+sudo docker tag boy:latest gaborsacr.azurecr.io/boy:latest
+sudo docker push gaborsacr.azurecr.io/boy:latest
+```
+5. On the portal search your **Container Registry**
+6. In the left side menu click on the **Repositories**. And there you should see your new container.
+7. We don't need the builder now so we can deallocate.
+8. On the portal search your VM
+9. Click on **Stop** and **Ok**
+
+## Build our second container
+Diversity is number 1 so build a container for the girls.
+Instead of using a build VM we use the Registry's built in feature.
+1. On github create an [access token](https://github.com/settings/tokens) and create an environment variable. Add **repo:status** and **public_repo** access.
+```powershell
+$PAT="<token>"
+```
+1. Create a task in powershell
+```powershell
+az acr task create --registry $ACRName --name buildgirls --image girl:latest --context https://github.com/szasza576/azplayground.git --file nginx/girl/Dockerfile --git-access-token $PAT
+```
+2. Run the task manually
+```powershell
+az acr task run --registry $ACRName --name buildgirls
+```
+3. You can see the build process
+4. When the build is finished then go to the portal and check the Registry again
+5. At the Registry check the **Tasks** submenu
+
+## Deploy the containers on AKS
+When the deployment is done then we can deploy our containers on AKS.
+
+1. Install AKS CLI (kubectl)
+```powershell
+az aks install-cli
+```
+2. Get the credentials to the AKS.
+```powershell
+az aks get-credentials --resource-group $ResourceGroup --name $AKSName
+```
+3. Check if it works
+```powershell
+kubectl get nodes
+```
+4. Download the K8s Deployment files from github to a local directory [boy](https://github.com/szasza576/azplayground/raw/master/k8s/boy.yml) and [girl](https://github.com/szasza576/azplayground/raw/master/k8s/girl.yml)
+5. Edit the files and change the image name to your registry URI.
+6. Change the prompt to the download directory
+7. Create the deployment for the boy
+```powershell
+kubectl create -f boy.yml
+```
+8. Check if the deployment is done
+```powershell
+kubectl get deployments
+kubectl get pods
+```
+
+## Create a loadbalancer and expose the pods
+We need an external IP address and then create a loadbalancer based on that. We use the portal for this task.
+
+1. Navigate to your own **Resource group**
+2. On the resource group's blade click to **Add**
+3. Search for **Public IP address** and click on it
+4. Add a **Name** and **DNS** if you wish. DNS is optional but shall be globally unique.
+5. Select **Static**
+6. Click on **Create**
+7. Wait for the deployment (about 1 minute) and then navigate to the resource
+8. Note the IP address
+9. Download the [K8s Service file](https://github.com/szasza576/azplayground/raw/master/k8s/publicIP.yml)
+10. Edit the file and update with your **Resource group** and your **Public IP**
+
+Now comes a tricky part. The pods needs to register to the loadbalancer hence AKS needs management (Contributor) access to the Resource group. We take the K8s own Service Principal and assign Contributor right to the Resource group.
+11. Grant Contributor rights to AKS (in PowerShell)
+```powershell
+$AKS_AppID=$(az aks show --resource-group $ResourceGroup --name $AKSName --query servicePrincipalProfile.clientId -o tsv)
+$ResourceGroup_scope=$(az group show --resource-group $ResourceGroup --query id -o tsv)
+az role assignment create --assignee $AKS_AppID --role "Contributor" --scope $ResourceGroup_scope
+```
+12. Check the AKS roles on the portal.
+13. Refresh K8s credentials
+```powershell
+az aks get-credentials --resource-group $ResourceGroup --name $AKSName
+```
+14. Create the K8s Service
+```powershell
+kubectl create -f .\publicIP.yml
+```
+15. Wait until it gets the external IP address. Sometimes the Role assignment takes several minute and until AKS has no right to register the IP address for the loadbalancer. After 2-5 minutes the rights are synched and it works.
+```powershell
+kubectl get services
+kubectl describe service kids
+```
+16. Open the IP address (or the DNS) in a browser
+
+## Deploy the second Deployment
+Now deploy the girl container and let's see what happens.
+1. Create the deployment for the girl
+```powershell
+kubectl create -f girl.yml
+```
+2. Check if the deployment is done
+```powershell
+kubectl get deployments
+kubectl get pods
+```
+3. Open the IP in another browser or incognito mode (cookies cause refresh issues).
+
+## Scale the cluster automatically
+Let's increase the Deplyoment size and then see how it scales the nodes.
+1. Edit the deployment file and change replica count from 1 to 5.
+```powershell
+kubectl edit deployments boy
+kubectl edit deployments girl
+```
+2. Edit the files, save and close them
+3. Monitor the number of pods and the number of servers
+```powershell
+kubectl get deployments
+kubectl get pods
+kubectl get nodes
+```
+4. Also navigate to your AKS resource on the portal and check the **Nodes pools**
+5. At the AKS resource, also check the **Insight** and **Metrics** submenus
+Hurray it works :) Now delete it :P
+
+## Clean up
+Similar as we did at the beginning delete the whole resource group
+1. Navigate to your own **Resource group**
+2. On the top menu click on **Delete resource group**
+3. You need to re-enter its Name.
+4. Click on **Delete**
+Removing everything will take a while. No need to wait for it.
+
