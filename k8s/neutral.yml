@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: girl
+  name: neutral
   labels:
     app: kids
 spec:
@@ -17,7 +17,7 @@ spec:
       nodeSelector:
         "beta.kubernetes.io/os": linux
       containers:
-      - name: girl
+      - name: neutral
         image: "<youracr>.azurecr.io/neutral:latest"
         resources:
           requests:
@@ -29,7 +29,7 @@ spec:
         ports:
         - containerPort: 80
         volumeMounts:
-        - mountPath: "/usr/share/nginx/html/index.html"
+        - mountPath: "/usr/share/nginx/html"
           name: azurefile
       volumes:
       - name: azurefile
