@@ -18,7 +18,7 @@ spec:
         "beta.kubernetes.io/os": linux
       containers:
       - name: girl
-        image: "<youracr>.azurecr.io/girl:latest"
+        image: "<youracr>.azurecr.io/neutral:latest"
         resources:
           requests:
             cpu: 400m
