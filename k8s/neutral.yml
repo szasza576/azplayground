@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: girl
+  labels:
+    app: kids
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kids
+  template:
+    metadata:
+      labels:
+        app: kids
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+      - name: girl
+        image: "<youracr>.azurecr.io/girl:latest"
+        resources:
+          requests:
+            cpu: 400m
+            memory: 1000Mi
+          limits:
+            cpu: 400m
+            memory: 1000Mi
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: "/usr/share/nginx/html/index.html"
+          name: azurefile
+      volumes:
+      - name: azurefile
+        azureFile:
+          secretName: azure-secret
+          shareName: neutral-html
+          readOnly: true
