@@ -303,6 +303,16 @@ kubectl get nodes
 5. At the AKS resource, also check the **Insight** and **Metrics** submenus
 Hurray it works :) Now delete it :P
 
+## Template
+Before we would delete the deployment we make a template from the concept.
+1. Navigate to your own **Resource group**
+2. Select all **Resources** by clicking on the checkbox
+3. Click on **Export template** on the blade's top menu
+4. Click on **Add to library**
+5. Give a **Name** and a short **Description**
+6. Click on **Save**
+Now we can clean up the deployment.
+
 ## Clean up
 Similar as we did at the beginning delete the whole resource group
 1. Navigate to your own **Resource group**
@@ -311,3 +321,21 @@ Similar as we did at the beginning delete the whole resource group
 4. Click on **Delete**
 Removing everything will take a while. No need to wait for it.
 
+## Redeploy from template
+As we saved the template we can redeploy the concept with few clicks.
+The only thing what the template didn't save is the managed identity. So we need to create another one.
+1. Create a new **Resource group**. (If the previous is still under delete then use another name.)
+2. Create a **Managed Identity** with the same name what you used earlier (it was myACRId in the example).
+3. Search for **Templates** in the top search bar
+4. Select your previously created template file
+5. Click on **Deploy**
+6. Select the right **Resource group**
+7. You might change the default names. Hint, as the ACR needs unique name and the previous sandbox might be still under delete hence it is good idea to change that name.
+8. Agree the terms at the bottom
+9. Click on **Purchase**
+You can see the deployment is on the way and new resources shall appear in the selected resource group.
+
+## Final clean up
+Don't forget to clean up your resource group to prevent extra charging.
+Delete your resource group.
+Hint, no need to wait the finish of the ongoing deployment. The resource group erase will terminate any ongoing creation.
