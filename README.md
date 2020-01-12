@@ -222,7 +222,7 @@ az aks get-credentials --resource-group $ResourceGroup --name $AKSName
 ```powershell
 kubectl get nodes
 ```
-4. Download the K8s Deployment files from github to a local directory [boy](https://github.com/szasza576/azplayground/raw/master/k8s/boy.yml) and [girl](https://github.com/szasza576/azplayground/raw/master/k8s/girl.yml)
+4. Download the K8s Deployment and an index.html files from github to a local directory [boy](https://github.com/szasza576/azplayground/raw/master/k8s/boy.yml), [girl](https://github.com/szasza576/azplayground/raw/master/k8s/girl.yml), [neutral](https://github.com/szasza576/azplayground/raw/master/k8s/neutral.yml) and [neutral's index.html](https://github.com/szasza576/azplayground/raw/master/nginx/neutral/index.html)
 5. Edit the files and change the image name to your registry URI.
 6. Change the prompt to the download directory
 7. Create the deployment for the boy
@@ -284,6 +284,59 @@ kubectl get deployments
 kubectl get pods
 ```
 3. Open the IP in another browser or incognito mode (cookies cause refresh issues).
+You shall see boys and girls.
+
+## Create a storage
+The boys and girls are outdated as they have burnt in html page. The "neutral" is more advanced as it uses a volume.
+1. Create a **Storage account** in powershell
+```powershell
+$StorageAccountName="<yourstorageaccountname>"
+az storage account create --name $StorageAccountName --resource-group $ResourceGroup --sku Standard_LRS --kind StorageV2
+```
+2. We need the connection point of the new Storage account
+```powershell
+$StorageConnection=$(az storage account show-connection-string --name $StorageAccountName --resource-group $ResourceGroup -o tsv)
+```
+3. Create an **Azure File Share**. Note, the name shall match with the one in the K8s deployment file.
+```powershell
+$FileShareName="neutral-html"
+az storage share create --name $FileShareName --connection-string $StorageConnection --quota 5
+```
+4. You can check the file share on the Portal as well
+5. Navigate to **Storage accounts**
+6. Select your new **Storage Account**
+7. Select **File shares** at the left menu
+8. Select your **File Share**. Called neutral-html
+9. Click on **Upload**
+10. Browse the previously downloaded index.html
+11. Click on **Upload**
+
+## Conncet K8s to the Storage account
+Kubernetes needs an authentication token to the Storage.
+1. Get the **Storage key**
+$StorageKey=$(az storage account keys list --resource-group $ResourceGroup --account-name $StorageAccountName --query "[0].value" -o tsv)
+2. Create a K8s secret
+kubectl create secret generic azure-secret --from-literal=azurestorageaccountname=$StorageAccountName --from-literal=azurestorageaccountkey=$StorageKey
+
+## Build and deploy the third container
+We will use the same build mechanism how the girls are built.
+1. Create a task in powershell
+```powershell
+az acr task create --registry $ACRName --name buildneutral --image neutral:latest --context https://github.com/szasza576/azplayground.git --file nginx/neutral/Dockerfile --git-access-token $PAT
+```
+2. Run the task manually
+```powershell
+az acr task run --registry $ACRName --name buildneutral
+```
+3. Create the deployment for the neutral
+```powershell
+kubectl create -f neutral.yml
+```
+4. Check if the deployment is done
+```powershell
+kubectl get deployments
+kubectl get pods
+```
 
 ## Scale the cluster automatically
 Let's increase the Deplyoment size and then see how it scales the nodes.
