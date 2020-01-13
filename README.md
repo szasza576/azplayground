@@ -14,7 +14,8 @@ Open [Azure Portal](https://portal.azure.com/) and log in to your account.
 
 ## Azure hierarchy
 It looks like this:
-![Hierarchy](Azure_hierarchy.png)
+![Hierarchy](https://d1o2okarmduwny.cloudfront.net/wp-content/uploads/2019/07/scope-levels.png)
+[Picture source](https://cloudacademy.com/blog/how-to-effectively-use-azure-management-groups-subscriptions-and-resource-groups/)
 
 ## Setup Azure CLI
 After the installation, start a PowerShell and enter the following commands to configure the proxy.
