@@ -1,12 +1,12 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: boy-internal
+  name: random-external
 spec:
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
   selector:
-    gender: boy
+    app: kids
   type: ClusterIP

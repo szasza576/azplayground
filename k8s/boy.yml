@@ -4,15 +4,18 @@ metadata:
   name: boy
   labels:
     app: kids
+    gender: boy
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: kids
+      gender: boy
   template:
     metadata:
       labels:
         app: kids
+        gender: boy
     spec:
       nodeSelector:
         "beta.kubernetes.io/os": linux

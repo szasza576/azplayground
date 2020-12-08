@@ -16,3 +16,7 @@ spec:
           serviceName: girl-internal
           servicePort: 80
         path: /girl
+      - backend:
+          serviceName: random-internal
+          servicePort: 80
+        path: /random
