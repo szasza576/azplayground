@@ -1,7 +1,7 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: random-external
+  name: random-internal
 spec:
   ports:
     - protocol: TCP
