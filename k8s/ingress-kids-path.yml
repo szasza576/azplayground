@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: kids-ingress
+  annotations:
+    kubernetes.io/ingress.class: addon-http-application-routing
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: boy-internal
+          servicePort: 80
+        path: /boy
+      - backend:
+          serviceName: girl-internal
+          servicePort: 80
+        path: /girl

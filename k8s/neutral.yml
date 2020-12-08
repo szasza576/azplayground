@@ -21,11 +21,11 @@ spec:
         image: "<youracr>.azurecr.io/neutral:latest"
         resources:
           requests:
-            cpu: 400m
-            memory: 1000Mi
+            cpu: 100m
+            memory: 200Mi
           limits:
-            cpu: 400m
-            memory: 1000Mi
+            cpu: 100m
+            memory: 200Mi
         ports:
         - containerPort: 80
         volumeMounts:
