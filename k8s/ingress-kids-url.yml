@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: kids-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  rules:
+  - host: boy.aks1.eu.anything
+    http:
+      paths:
+      - backend:
+          serviceName: boy-internal
+          servicePort: 80
+        path: /
+  - host: girl.aks1.eu.anything
+    http:
+      paths:
+      - backend:
+          serviceName: girl-internal
+          servicePort: 80
+        path: /
+  - host: random.aks1.eu.anything
+    http:
+      paths:
+      - backend:
+          serviceName: random-internal
+          servicePort: 80
+        path: /
