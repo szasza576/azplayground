@@ -15,18 +15,24 @@ spec:
       - backend:
           serviceName: boy-internal
           servicePort: 80
-        path: /
+        path: /(.*)
   - host: girl.aks1.eu.anything
     http:
       paths:
       - backend:
           serviceName: girl-internal
           servicePort: 80
-        path: /
+        path: /(.*)
   - host: random.aks1.eu.anything
     http:
       paths:
       - backend:
           serviceName: random-internal
           servicePort: 80
-        path: /
+        path: /(.*)
+  - http:
+      paths:
+      - backend:
+          serviceName: random-internal
+          servicePort: 80
+        path: /(.*)
