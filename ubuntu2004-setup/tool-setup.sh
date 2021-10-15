@@ -32,7 +32,7 @@ curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
 # Install Kubectl and Kubelogin
 sudo az aks install-cli
-echo 'source <(kubectl completion bash)' >>~/.bashrc
+echo 'source <(kubectl completion bash)' >> /home/*/.bashrc
 
 # Install Helm
 curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
@@ -42,6 +42,3 @@ sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
 
 sudo apt-get update
 sudo apt-get install -y helm
-
-# Restart machine
-sudo reboot
