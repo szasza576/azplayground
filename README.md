@@ -25,8 +25,6 @@ This is temporary only to that PowerShell session.
 Then login the Azure CLI. It will prompt up your default browser and ask you to log in.
 
 ```powershell
-$env:HTTP_PROXY='http://10.158.100.1:8080'
-$env:HTTPS_PROXY='http://10.158.100.1:8080'
 az login
 ```
 
