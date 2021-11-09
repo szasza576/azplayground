@@ -1,4 +1,4 @@
-# Readme
+# Readme test
 This repository is used to play a bit around Azure. I demonstrates how to deploy VMs, Container Registry, Kubernetes Cluster, Containers, etc.
 This is not a full training or learning material. It just give a feeling about Azure with some focus areas (especially containers).
 The target is to have 2 hours of fun for the price of 1 or half bottle of beer (at Hungarian rate). Seriously, you will use my shared subscription so deploy carefully ;)
